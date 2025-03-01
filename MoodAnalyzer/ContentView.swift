@@ -2,8 +2,9 @@
 //  ContentView.swift
 //  MoodAnalyzer
 //
-//  Created by Srimoyee Mukhopadhyay on 2/28/25.
+//  Updated with Final Report Integration
 //
+
 import SwiftUI
 
 // Define the Question struct.
@@ -77,7 +78,6 @@ struct MainQuestionsView: View {
     @State private var currentQuestionIndex = 0
     @State private var responses: [(question: Question, score: Int)] = []
     @State private var showResultsView = false
-    @State private var showDrawingView = false
     
     // Regular Questions (64 Questions)
     let regularQuestions: [Question] = [
@@ -150,7 +150,7 @@ struct MainQuestionsView: View {
         Question(text: "I maintain a regular sleep schedule.", category: "Sleep & Physical Health", isReverseScored: false),
         Question(text: "I notice a strong connection between my physical health and my mood.", category: "Sleep & Physical Health", isReverseScored: false),
         Question(text: "I engage in physical activities that boost my energy.", category: "Sleep & Physical Health", isReverseScored: false),
-        Question(text: "I pay attention to my body’s signals of fatigue.", category: "Sleep & Physical Health", isReverseScored: false),
+        Question(text: "I pay attention to my body's signals of fatigue.", category: "Sleep & Physical Health", isReverseScored: false),
         Question(text: "I prioritize my physical health as part of my overall well-being.", category: "Sleep & Physical Health", isReverseScored: false),
         
         // Work-Life Balance (6 Questions)
@@ -165,11 +165,11 @@ struct MainQuestionsView: View {
     // Kid-friendly Questions (Green Mode)
     let kidQuestions: [Question] = [
         // Feeling Alone & Making Friends (7 Questions)
-        Question(text: "After a long school day, do you sometimes feel like you’re all by yourself even when other kids are around?", category: "Feeling Alone & Making Friends", isReverseScored: true),
-        Question(text: "When it’s lunchtime, do you sometimes wish you had someone to share your snack or story with?", category: "Feeling Alone & Making Friends", isReverseScored: true),
-        Question(text: "On the playground, do you sometimes feel like you’re watching others play instead of joining in?", category: "Feeling Alone & Making Friends", isReverseScored: true),
+        Question(text: "After a long school day, do you sometimes feel like you're all by yourself even when other kids are around?", category: "Feeling Alone & Making Friends", isReverseScored: true),
+        Question(text: "When it's lunchtime, do you sometimes wish you had someone to share your snack or story with?", category: "Feeling Alone & Making Friends", isReverseScored: true),
+        Question(text: "On the playground, do you sometimes feel like you're watching others play instead of joining in?", category: "Feeling Alone & Making Friends", isReverseScored: true),
         Question(text: "Have you ever wanted to start your own club because you felt like no one really understood you?", category: "Feeling Alone & Making Friends", isReverseScored: true),
-        Question(text: "During group activities, do you sometimes feel left out or that your ideas aren’t heard?", category: "Feeling Alone & Making Friends", isReverseScored: true),
+        Question(text: "During group activities, do you sometimes feel left out or that your ideas aren't heard?", category: "Feeling Alone & Making Friends", isReverseScored: true),
         Question(text: "When recess is over, do you miss talking with a friend or a buddy?", category: "Feeling Alone & Making Friends", isReverseScored: false),
         Question(text: "After a fun playdate, do you feel happy and close to your friends?", category: "Feeling Alone & Making Friends", isReverseScored: false),
         
@@ -187,15 +187,15 @@ struct MainQuestionsView: View {
         Question(text: "During team games or projects, do you find it easy to take charge and keep going?", category: "Staying Strong & Focused", isReverseScored: false),
         Question(text: "If you set a goal, like reading a whole book, do you keep working on it even if it feels long?", category: "Staying Strong & Focused", isReverseScored: false),
         Question(text: "When learning something new, like riding a bike, do you keep trying until you get it right?", category: "Staying Strong & Focused", isReverseScored: false),
-        Question(text: "When it’s time to focus, do you find it easy to ignore fun distractions around you?", category: "Staying Strong & Focused", isReverseScored: false),
+        Question(text: "When it's time to focus, do you find it easy to ignore fun distractions around you?", category: "Staying Strong & Focused", isReverseScored: false),
         Question(text: "If a task feels tricky, do you see it as a fun challenge to overcome?", category: "Staying Strong & Focused", isReverseScored: false),
         Question(text: "When you start a project, do you feel proud to finish it, even if it takes a little while?", category: "Staying Strong & Focused", isReverseScored: false),
         
         // Feeling Blue & Sad Days (7 Questions)
-        Question(text: "On a day when nothing seems to go right, do you sometimes feel like you’re stuck in a rainy mood?", category: "Feeling Blue & Sad Days", isReverseScored: true),
+        Question(text: "On a day when nothing seems to go right, do you sometimes feel like you're stuck in a rainy mood?", category: "Feeling Blue & Sad Days", isReverseScored: true),
         Question(text: "When you miss out on playing with your friends, do you feel extra sad?", category: "Feeling Blue & Sad Days", isReverseScored: true),
-        Question(text: "After a busy day, do you sometimes feel too quiet or down even when you’re with family?", category: "Feeling Blue & Sad Days", isReverseScored: true),
-        Question(text: "Even when there are lots of people around, do you ever feel like something’s missing inside?", category: "Feeling Blue & Sad Days", isReverseScored: true),
+        Question(text: "After a busy day, do you sometimes feel too quiet or down even when you're with family?", category: "Feeling Blue & Sad Days", isReverseScored: true),
+        Question(text: "Even when there are lots of people around, do you ever feel like something's missing inside?", category: "Feeling Blue & Sad Days", isReverseScored: true),
         Question(text: "When you feel really sad, do you sometimes cry and wonder why?", category: "Feeling Blue & Sad Days", isReverseScored: true),
         Question(text: "After a rough day, do you feel like your smile is hiding somewhere deep inside?", category: "Feeling Blue & Sad Days", isReverseScored: true),
         Question(text: "Do you sometimes wish you could get a big, warm hug to make the sad feelings go away?", category: "Feeling Blue & Sad Days", isReverseScored: false),
@@ -211,9 +211,9 @@ struct MainQuestionsView: View {
         
         // Bouncing Back & Finding Fun Solutions (7 Questions)
         Question(text: "When you trip or fall during play, do you quickly get up and try again with a smile?", category: "Bouncing Back & Finding Fun Solutions", isReverseScored: false),
-        Question(text: "If your art project doesn’t turn out right, do you find a fun way to make it better?", category: "Bouncing Back & Finding Fun Solutions", isReverseScored: false),
+        Question(text: "If your art project doesn't turn out right, do you find a fun way to make it better?", category: "Bouncing Back & Finding Fun Solutions", isReverseScored: false),
         Question(text: "After a tough day at school, do you have a secret way to turn it into a fun evening?", category: "Bouncing Back & Finding Fun Solutions", isReverseScored: false),
-        Question(text: "When you face a problem, do you sometimes imagine you’re a superhero who can solve anything?", category: "Bouncing Back & Finding Fun Solutions", isReverseScored: false),
+        Question(text: "When you face a problem, do you sometimes imagine you're a superhero who can solve anything?", category: "Bouncing Back & Finding Fun Solutions", isReverseScored: false),
         Question(text: "After a mistake or a messy moment, do you try to laugh it off and start fresh?", category: "Bouncing Back & Finding Fun Solutions", isReverseScored: false),
         Question(text: "When things go wrong, do you think of a clever idea that makes you feel better?", category: "Bouncing Back & Finding Fun Solutions", isReverseScored: false),
         Question(text: "Do you believe that every day can end with something fun or happy, even if it started off rough?", category: "Bouncing Back & Finding Fun Solutions", isReverseScored: false)
@@ -241,20 +241,8 @@ struct MainQuestionsView: View {
                 .font(.caption)
                 .foregroundColor(.gray)
             
-            if showDrawingView {
-                DrawingView()
-            } else if showResultsView {
-                VStack {
-                    ResultsView(responses: responses)
-                    Button("Proceed to Drawing") {
-                        showDrawingView = true
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
+            if showResultsView {
+                ResultsView(responses: responses, isGreenMode: isGreenMode)
             } else {
                 // ✅ Progress Bar for completed questions
                 ProgressView(value: Double(currentQuestionIndex + 1), total: Double(questions.count))
@@ -300,6 +288,9 @@ struct MainQuestionsView: View {
 // ResultsView computes and displays category percentages as a simple bar graph.
 struct ResultsView: View {
     var responses: [(question: Question, score: Int)]
+    var isGreenMode: Bool
+    @State private var navigateToDrawing = false
+    
     var categoryPercentages: [String: Double] {
         var dict: [String: (sum: Int, count: Int)] = [:]
         for response in responses {
@@ -327,7 +318,7 @@ struct ResultsView: View {
                             Text("\(category): \(Int(percentage))%")
                             GeometryReader { geometry in
                                 Rectangle()
-                                    .fill(Color.blue)
+                                    .fill(categoryColor(percentage))
                                     .frame(width: geometry.size.width * CGFloat(percentage / 100), height: 20)
                             }
                             .frame(height: 20)
@@ -335,9 +326,36 @@ struct ResultsView: View {
                         .padding()
                     }
                 }
+                
+                NavigationLink(
+                    destination: DrawingView(responses: responses, isGreenMode: isGreenMode),
+                    isActive: $navigateToDrawing,
+                    label: {
+                        Button("Proceed to Drawing") {
+                            navigateToDrawing = true
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .padding(.horizontal)
+                    }
+                )
+                
                 Spacer()
             }
             .padding()
+        }
+    }
+    
+    private func categoryColor(_ percentage: Double) -> Color {
+        if percentage >= 70.0 {
+            return Color.green
+        } else if percentage >= 40.0 {
+            return Color.orange
+        } else {
+            return Color.red
         }
     }
 }

@@ -2,17 +2,23 @@
 //  DrawingView.swift
 //  MoodAnalyzer
 //
-//  Created by Srimoyee Mukhopadhyay on 2/28/25.
+//  Updated version with Final Report integration
 //
+
 import SwiftUI
 import PencilKit
 
 struct DrawingView: View {
+    let responses: [(question: Question, score: Int)]
+    let isGreenMode: Bool
+    
     @State private var canvasView = PKCanvasView()
     @State private var selectedColor: UIColor = .black
     @State private var isAnalyzing = false
     @State private var aiAnalysis = ""
     @State private var showAnalysisView = false
+    @State private var showFinalReport = false
+    @State private var currentDrawingImage: UIImage?
     
     // Define a palette of colors for the user to choose from.
     let palette: [UIColor] = [.black, .red, .green, .blue, .orange, .purple]
@@ -48,7 +54,10 @@ struct DrawingView: View {
             
             Button(action: {
                 isAnalyzing = true
-                analyzeArtwork()
+                // Capture the drawing
+                let image = canvasView.drawing.image(from: canvasView.bounds, scale: 1.0)
+                currentDrawingImage = image
+                analyzeArtwork(image: image)
             }) {
                 if isAnalyzing {
                     ProgressView()
@@ -76,18 +85,40 @@ struct DrawingView: View {
                     .cornerRadius(8)
             }
             .padding(.top, 8)
+            
+            // Only show if we have analysis results
+            if !aiAnalysis.isEmpty && currentDrawingImage != nil {
+                Button(action: {
+                    showFinalReport = true
+                }) {
+                    Text("Continue to Final Report")
+                        .padding()
+                        .frame(width: 250)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .padding(.top, 16)
+            }
         }
         .padding()
         .sheet(isPresented: $showAnalysisView) {
             AnalysisView(analysisText: aiAnalysis)
         }
+        .fullScreenCover(isPresented: $showFinalReport) {
+            if let drawingImage = currentDrawingImage {
+                FinalReportView(
+                    responses: responses,
+                    drawingAnalysis: aiAnalysis,
+                    drawingImage: drawingImage,
+                    isGreenMode: isGreenMode
+                )
+            }
+        }
     }
     
-    private func analyzeArtwork() {
-        // Capture the current drawing as an image
-        let image = canvasView.drawing.image(from: canvasView.bounds, scale: 1.0)
-        
-        // Call the GroqVisionAPI (from your GroqVisionAPI.swift file)
+    private func analyzeArtwork(image: UIImage) {
+        // Call the GroqVisionAPI
         GroqVisionAPI().analyzeDrawing(image: image) { response in
             DispatchQueue.main.async {
                 isAnalyzing = false
@@ -116,6 +147,7 @@ struct DrawingCanvas: UIViewRepresentable {
 
 struct DrawingView_Previews: PreviewProvider {
     static var previews: some View {
-        DrawingView()
+        let sampleResponses: [(question: Question, score: Int)] = []
+        DrawingView(responses: sampleResponses, isGreenMode: false)
     }
 }

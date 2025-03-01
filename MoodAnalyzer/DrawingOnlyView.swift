@@ -148,9 +148,9 @@ struct DrawingOnlyView: View {
             }
             .padding(.top, 10)
             
-            // Previous analyses button and View Report button
-            HStack {
-                // Previous analyses button
+            // Fixed layout for previous analyses and final report buttons
+            VStack(spacing: 15) {
+                // Previous analyses button row
                 if !drawingAnalyses.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 15) {
@@ -170,12 +170,12 @@ struct DrawingOnlyView: View {
                                 }
                             }
                         }
+                        .padding(.horizontal)
                     }
                 }
                 
-                // Add View Report button when all analyses are complete
+                // Final report button in its own row when all analyses are complete
                 if allAnalysesCompleted {
-                    Spacer()
                     Button(action: {
                         if cumulativeAnalysis.isEmpty {
                             generateCumulativeAnalysis { analysis in
@@ -190,21 +190,23 @@ struct DrawingOnlyView: View {
                             if isGeneratingFinalReport {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                Text("Generating...")
+                                Text("Generating Final Report...")
                             } else {
                                 Image(systemName: "doc.text.fill")
                                 Text("View Final Report")
                             }
                         }
-                        .padding(8)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 20)
+                        .frame(maxWidth: .infinity) // Make button full width
                         .background(isGeneratingFinalReport ? Color.gray : Color.green)
                         .foregroundColor(.white)
-                        .cornerRadius(5)
+                        .cornerRadius(8)
                     }
                     .disabled(isGeneratingFinalReport)
+                    .padding(.horizontal)
                 }
             }
-            .padding(.horizontal)
             .padding(.top, 5)
         }
         .padding(.bottom)

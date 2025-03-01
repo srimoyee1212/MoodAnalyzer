@@ -1,10 +1,3 @@
-//
-//  GroqPromptService.swift
-//  MoodAnalyzer
-//
-//  Created by Srimoyee Mukhopadhyay on 3/1/25.
-//
-
 import Foundation
 
 struct GroqPromptService {
@@ -75,13 +68,17 @@ struct GroqPromptService {
         request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
+        // Ensure we're using the correct prompt number
+        let promptNumber = iteration
+        let promptTotal = 3
+        
         // Create a prompt that builds on the previous analysis
         let prompt = """
         Here is an analysis of a person's drawing:
         
         \(previousAnalysis)
         
-        Based on this analysis, I need you to generate the next therapeutic drawing prompt (Prompt #\(iteration) of 3). The prompt should:
+        Based on this analysis, I need you to generate the next therapeutic drawing prompt (Prompt #\(promptNumber) of \(promptTotal)). The prompt should:
         
         1. Build upon insights from the previous drawing analysis
         2. Explore a different aspect of their emotional expression
@@ -89,10 +86,10 @@ struct GroqPromptService {
         4. Be specific enough to guide their drawing but open enough for personal expression
         5. Avoid being overly clinical or diagnostic in wording
         
-        If this is the second prompt (of 3), focus on feelings of safety, security or social connection.
-        If this is the third prompt (of 3), focus on future aspirations, hopes, or desired emotional states.
+        If this is prompt #2 (of 3), focus on feelings of safety, security or social connection.
+        If this is prompt #3 (of 3), focus on future aspirations, hopes, or desired emotional states.
         
-        The prompt should be 2-3 sentences long. Do not include any explanation or commentary - just provide the drawing prompt itself.
+        The prompt should be 2-3 sentences long. Do not include any explanation or commentary - just provide the drawing prompt itself. Do not include "Prompt #2 of 3:" or similar text in your response.
         """
         
         let body: [String: Any] = [
@@ -123,7 +120,9 @@ struct GroqPromptService {
                    let choices = json["choices"] as? [[String: Any]],
                    let message = choices.first?["message"] as? [String: Any],
                    let content = message["content"] as? String {
-                    completion(content.trimmingCharacters(in: .whitespacesAndNewlines))
+                    // Remove any "Prompt #X of 3:" prefix if it exists despite our instructions
+                    let cleanedContent = removePromptPrefix(from: content)
+                    completion(cleanedContent.trimmingCharacters(in: .whitespacesAndNewlines))
                 } else {
                     completion("Error: Unable to parse response")
                 }
@@ -131,6 +130,17 @@ struct GroqPromptService {
                 completion("Error parsing JSON: \(error.localizedDescription)")
             }
         }.resume()
+    }
+    
+    // Helper function to remove prompt numbering prefixes
+    private func removePromptPrefix(from content: String) -> String {
+        // Regular expression to match patterns like "Prompt #X of Y:" or "Prompt #X:"
+        let pattern = "^(Prompt\\s+#\\d+\\s+of\\s+\\d+:\\s*)|(Prompt\\s+#\\d+:\\s*)"
+        if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
+            let range = NSRange(location: 0, length: content.utf16.count)
+            return regex.stringByReplacingMatches(in: content, options: [], range: range, withTemplate: "")
+        }
+        return content
     }
     
     // Generate final cumulative analysis based on all drawing analyses

@@ -2,7 +2,7 @@
 //  EmotionalMetricsView.swift
 //  MoodAnalyzer
 //
-//  Fixed layout version
+//  Fixed layout version with improved label visibility
 //
 
 import SwiftUI
@@ -174,7 +174,7 @@ struct EmotionalProfileChart: View {
     }
 }
 
-// Refined Radar Chart with better positioning
+// Refined Radar Chart with better positioning and improved label visibility
 struct RadarChartView: View {
     let data: [Double] // Values between 0 and 1
     let labels: [String]
@@ -226,7 +226,7 @@ struct RadarChartView: View {
                 dataPolygon(in: geometry.size)
                     .stroke(outlineColor, lineWidth: 2)
                 
-                // Labels with better positioning
+                // Labels with improved visibility for both light and dark mode
                 ForEach(0..<data.count, id: \.self) { i in
                     let angle = angleFor(index: i, total: data.count)
                     let radius = geometry.size.width/2 + 20
@@ -236,10 +236,16 @@ struct RadarChartView: View {
                         angle: angle
                     )
                     
-                    // Adjust label position based on its position in the circle
+                    // Create a label with background for better visibility
                     Text(labels[i])
                         .font(.caption)
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary) // Uses system text color for better visibility in any mode
+                        .padding(4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color(UIColor.systemBackground).opacity(0.7)) // Semi-transparent background
+                                .shadow(color: Color.black.opacity(0.1), radius: 1, x: 0, y: 1)
+                        )
                         .position(adjustLabelPosition(for: point, label: labels[i], angle: angle))
                 }
             }

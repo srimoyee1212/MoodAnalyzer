@@ -12,7 +12,7 @@ struct DrawingSeriesView: View {
                 .fontWeight(.bold)
                 .padding(.bottom, 5)
             
-            ForEach(0..<min(drawings.count, analyses.count), id: \.self) { index in
+            ForEach(0..<min(drawings.count, min(analyses.count, prompts.count)), id: \.self) { index in
                 VStack(alignment: .leading, spacing: 10) {
                     // Drawing number with indicator
                     HStack {
@@ -29,17 +29,23 @@ struct DrawingSeriesView: View {
                         Spacer()
                     }
                     
-                    // Prompt given
+                    // Prompt given - with correct number
                     if index < prompts.count {
-                        Text("Prompt: \(prompts[index])")
-                            .font(.subheadline)
-                            .italic()
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(UIColor.systemGray6))
-                            )
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Prompt: #\(index + 1) of \(prompts.count)")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .italic()
+                            
+                            Text(prompts[index])
+                                .font(.subheadline)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(UIColor.systemGray6))
+                        )
                     }
                     
                     // Drawing image

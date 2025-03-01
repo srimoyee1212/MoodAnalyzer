@@ -2,7 +2,7 @@
 //  FinalReportView.swift
 //  MoodAnalyzer
 //
-//  Created on 3/1/25.
+//  Updated with Emotional Metrics and Charts
 //
 
 import SwiftUI
@@ -34,6 +34,15 @@ struct FinalReportView: View {
             percentages[cat] = (Double(data.sum) / Double(maxScore)) * 100.0
         }
         return percentages
+    }
+    
+    // Emotional metrics computed from assessment data
+    var emotionalMetrics: EmotionalMetrics {
+        return EmotionalMetrics.calculateFromAssessment(
+            responses: responses,
+            drawingAnalysis: drawingAnalysis,
+            categoryPercentages: categoryPercentages
+        )
     }
     
     // Process categories into groups
@@ -78,6 +87,16 @@ struct FinalReportView: View {
                             .foregroundColor(.gray)
                     }
                     .padding(.horizontal)
+                    
+                    Divider()
+                    
+                    // New Analysis Metrics View
+                    AnalysisMetricsView(metrics: emotionalMetrics)
+                        .padding(.horizontal)
+                    
+                    // New Emotional Expression Profile Chart
+                    EmotionalProfileChart(metrics: emotionalMetrics)
+                        .padding(.horizontal)
                     
                     Divider()
                     
@@ -254,10 +273,28 @@ struct FinalReportView: View {
         
         The questionnaire results (overall score: \(Int(avgScore))%) and the drawing analysis (emotional tone: \(drawingEmotionalTone)) \(consistencyAssessment)
         
+        Based on the emotional metrics, this individual shows \(emotionalMetrics.expressionLevelText.lowercased()) expression levels with \(emotionalMetrics.emotionalBalanceText.lowercased()) emotional balance and \(emotionalMetrics.creativeEnergyText.lowercased()) creative energy. The emotional profile indicates particular strength in \(identifyStrongestDimension()).
+        
         This assessment was conducted using the \(assessmentMode) assessment framework and should be interpreted within the appropriate developmental context.
         
         Note: This report is designed as a clinical aid and should be used in conjunction with professional clinical judgment and additional assessment methods as appropriate.
         """
+    }
+    
+    private func identifyStrongestDimension() -> String {
+        let dimensions = [
+            ("calm", emotionalMetrics.calm),
+            ("joy", emotionalMetrics.joy),
+            ("emotional expression", emotionalMetrics.expression),
+            ("energy", emotionalMetrics.energy)
+        ]
+        
+        // Find the dimension with the highest value
+        if let strongest = dimensions.max(by: { $0.1 < $1.1 }) {
+            return strongest.0
+        }
+        
+        return "balanced emotional dimensions"
     }
     
     private func determineEmotionalTone(from analysis: String) -> String {
@@ -295,7 +332,7 @@ struct FinalReportView: View {
         }
     }
     
-    // New simpler PDF generation and viewing
+    // PDF generation and sharing functions
     private func generateAndViewPDF() {
         if let fileURL = generatePDFFile() {
             let pdfDoc = PDFDocument(url: fileURL)
@@ -304,7 +341,6 @@ struct FinalReportView: View {
         }
     }
     
-    // New sharing function that uses a simpler approach
     private func generateAndSharePDF() {
         if let fileURL = generatePDFFile() {
             sharingItems = [fileURL]
@@ -312,7 +348,6 @@ struct FinalReportView: View {
         }
     }
     
-    // Helper to generate the PDF file and return the URL
     private func generatePDFFile() -> URL? {
         return ShareController.generateAndSavePDF(
             responses: responses,

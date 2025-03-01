@@ -256,6 +256,16 @@ struct MainQuestionsView: View {
                     .cornerRadius(10)
                 }
             } else {
+                // ✅ Progress Bar for completed questions
+                ProgressView(value: Double(currentQuestionIndex + 1), total: Double(questions.count))
+                    .progressViewStyle(LinearProgressViewStyle())
+                    .frame(width: 200)
+                    .padding()
+                
+                Text("\(Int((Double(currentQuestionIndex + 1) / Double(questions.count)) * 100))% completed")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                
                 Text(questions[currentQuestionIndex].text)
                     .font(.title2)
                     .padding()

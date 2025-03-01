@@ -2,7 +2,7 @@
 //  FinalReportView.swift
 //  MoodAnalyzer
 //
-//  Updated with Emotional Metrics and Charts
+//  Updated with improved layout
 //
 
 import SwiftUI
@@ -77,7 +77,12 @@ struct FinalReportView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Section(header: Text("Assessment Information").font(.headline)) {
+                    // Assessment Information
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Assessment Information")
+                            .font(.headline)
+                            .padding(.bottom, 2)
+                        
                         Text("Assessment Date: \(formattedDate())")
                             .font(.subheadline)
                             .foregroundColor(.gray)
@@ -90,17 +95,23 @@ struct FinalReportView: View {
                     
                     Divider()
                     
-                    // New Analysis Metrics View
+                    // New Analysis Metrics View - Fixed layout
                     AnalysisMetricsView(metrics: emotionalMetrics)
                         .padding(.horizontal)
                     
-                    // New Emotional Expression Profile Chart
+                    // New Emotional Expression Profile Chart - Fixed layout
                     EmotionalProfileChart(metrics: emotionalMetrics)
                         .padding(.horizontal)
+                        .frame(height: 300)
                     
                     Divider()
                     
-                    Section(header: Text("Assessment Summary").font(.headline)) {
+                    // Assessment Summary
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Assessment Summary")
+                            .font(.headline)
+                            .padding(.bottom, 2)
+                        
                         Text(overallAssessment)
                             .padding()
                             .background(
@@ -112,19 +123,26 @@ struct FinalReportView: View {
                     
                     Divider()
                     
-                    Section(header: Text("Questionnaire Results").font(.headline)) {
+                    // Questionnaire Results
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Questionnaire Results")
+                            .font(.headline)
+                            .padding(.bottom, 2)
+                        
                         ForEach(categoryPercentages.keys.sorted(), id: \.self) { category in
                             if let percentage = categoryPercentages[category] {
-                                VStack(alignment: .leading) {
+                                VStack(alignment: .leading, spacing: 4) {
                                     Text("\(category): \(Int(percentage))%")
+                                        .font(.subheadline)
                                     GeometryReader { geometry in
                                         Rectangle()
                                             .fill(categoryColor(percentage))
-                                            .frame(width: geometry.size.width * CGFloat(percentage / 100), height: 20)
+                                            .frame(width: geometry.size.width * CGFloat(percentage / 100), height: 16)
+                                            .cornerRadius(3)
                                     }
-                                    .frame(height: 20)
+                                    .frame(height: 16)
                                 }
-                                .padding(.vertical, 5)
+                                .padding(.vertical, 3)
                             }
                         }
                         
@@ -138,12 +156,14 @@ struct FinalReportView: View {
                             if !neutralCategories.isEmpty {
                                 Text("Areas of Moderate Function:")
                                     .fontWeight(.semibold)
+                                    .padding(.top, 5)
                                 Text(neutralCategories.joined(separator: ", "))
                             }
                             
                             if !concernCategories.isEmpty {
                                 Text("Areas of Potential Concern:")
                                     .fontWeight(.semibold)
+                                    .padding(.top, 5)
                                 Text(concernCategories.joined(separator: ", "))
                             }
                         }
@@ -157,7 +177,12 @@ struct FinalReportView: View {
                     
                     Divider()
                     
-                    Section(header: Text("Drawing Analysis").font(.headline)) {
+                    // Drawing Analysis
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Drawing Analysis")
+                            .font(.headline)
+                            .padding(.bottom, 2)
+                        
                         Image(uiImage: drawingImage)
                             .resizable()
                             .scaledToFit()
@@ -176,7 +201,12 @@ struct FinalReportView: View {
                     
                     Divider()
                     
-                    Section(header: Text("Integrated Assessment").font(.headline)) {
+                    // Integrated Assessment
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Integrated Assessment")
+                            .font(.headline)
+                            .padding(.bottom, 2)
+                        
                         Text(integratedAssessment())
                             .padding()
                             .background(
@@ -188,7 +218,12 @@ struct FinalReportView: View {
                     
                     Divider()
                     
-                    Section(header: Text("Additional Notes").font(.headline)) {
+                    // Additional Notes
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Additional Notes")
+                            .font(.headline)
+                            .padding(.bottom, 2)
+                        
                         TextEditor(text: $assessmentNotes)
                             .frame(height: 150)
                             .padding(4)
@@ -199,29 +234,36 @@ struct FinalReportView: View {
                     }
                     .padding(.horizontal)
                     
-                    VStack(spacing: 15) {
+                    // Actions section
+                    HStack(spacing: 15) {
                         Button(action: {
                             generateAndViewPDF()
                         }) {
-                            Text("Generate PDF Report")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color.blue)
-                                .cornerRadius(10)
+                            HStack {
+                                Image(systemName: "doc.text")
+                                Text("Generate PDF")
+                            }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .cornerRadius(10)
                         }
                         
                         Button(action: {
                             generateAndSharePDF()
                         }) {
-                            Text("Share Report")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color.green)
-                                .cornerRadius(10)
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Share Report")
+                            }
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.green)
+                            .cornerRadius(10)
                         }
                     }
                     .padding()

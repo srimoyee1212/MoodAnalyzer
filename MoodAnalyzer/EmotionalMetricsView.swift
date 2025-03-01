@@ -2,7 +2,7 @@
 //  EmotionalMetricsView.swift
 //  MoodAnalyzer
 //
-//  Created on 3/1/25.
+//  Fixed layout version
 //
 
 import SwiftUI
@@ -25,9 +25,9 @@ struct EmotionalMetrics {
     }
     
     var emotionalBalanceText: String {
-        if emotionalBalance >= 0.7 { return "Strong" }
+        if emotionalBalance >= 0.7 { return "High" }
         else if emotionalBalance >= 0.4 { return "Moderate" }
-        else { return "Fragile" }
+        else { return "Low" }
     }
     
     var creativeEnergyText: String {
@@ -47,8 +47,20 @@ struct EmotionalMetrics {
     }
     
     var energyDirection: String {
-        if creativeEnergy > 0.5 { return "Dynamic" }
+        if creativeEnergy > 0.6 { return "Dynamic" }
         else { return "Steady" }
+    }
+    
+    var isExpressionPositive: Bool {
+        return expressionLevel > 0.5
+    }
+    
+    var isBalancePositive: Bool {
+        return emotionalBalance > 0.5
+    }
+    
+    var isEnergyPositive: Bool {
+        return creativeEnergy > 0.6
     }
 }
 
@@ -56,69 +68,82 @@ struct AnalysisMetricsView: View {
     let metrics: EmotionalMetrics
     
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 15) {
             HStack {
                 Image(systemName: "chart.bar.fill")
-                    .font(.title)
+                    .font(.title2)
                     .foregroundColor(.blue)
                 
                 Text("Analysis Metrics")
-                    .font(.title)
+                    .font(.title2)
                     .fontWeight(.bold)
             }
-            .padding(.bottom, 10)
+            .padding(.bottom, 5)
             
-            HStack(spacing: 20) {
-                metricBlock(
-                    title: "Expression Level",
-                    value: metrics.expressionLevelText,
-                    direction: metrics.expressionDirection,
-                    isPositive: metrics.expressionLevel > 0.5
-                )
+            // Three columns for metrics using Grid layout
+            Grid(alignment: .leading, horizontalSpacing: 15, verticalSpacing: 10) {
+                GridRow {
+                    Text("Expression\nLevel")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Emotional\nBalance")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Creative\nEnergy")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                }
                 
-                metricBlock(
-                    title: "Emotional Balance",
-                    value: metrics.emotionalBalanceText,
-                    direction: metrics.balanceDirection,
-                    isPositive: metrics.emotionalBalance > 0.5
-                )
+                GridRow {
+                    Text(metrics.expressionLevelText)
+                        .font(.system(size: 28, weight: .bold))
+                    
+                    Text(metrics.emotionalBalanceText)
+                        .font(.system(size: 28, weight: .bold))
+                    
+                    Text(metrics.creativeEnergyText)
+                        .font(.system(size: 28, weight: .bold))
+                }
                 
-                metricBlock(
-                    title: "Creative Energy",
-                    value: metrics.creativeEnergyText,
-                    direction: metrics.energyDirection,
-                    isPositive: metrics.creativeEnergy > 0.5
-                )
+                GridRow {
+                    HStack(spacing: 4) {
+                        Image(systemName: metrics.isExpressionPositive ? "arrow.up" : "arrow.down")
+                            .foregroundColor(metrics.isExpressionPositive ? .green : .orange)
+                        
+                        Text(metrics.expressionDirection)
+                            .font(.subheadline)
+                            .foregroundColor(metrics.isExpressionPositive ? .green : .orange)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: metrics.isBalancePositive ? "arrow.up" : "arrow.down")
+                            .foregroundColor(metrics.isBalancePositive ? .green : .orange)
+                        
+                        Text(metrics.balanceDirection)
+                            .font(.subheadline)
+                            .foregroundColor(metrics.isBalancePositive ? .green : .orange)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: metrics.isEnergyPositive ? "arrow.up" : "arrow.down")
+                            .foregroundColor(metrics.isEnergyPositive ? .green : .yellow)
+                        
+                        Text(metrics.energyDirection)
+                            .font(.subheadline)
+                            .foregroundColor(metrics.isEnergyPositive ? .green : .yellow)
+                    }
+                }
             }
             .frame(maxWidth: .infinity)
-            .padding(.bottom, 15)
         }
         .padding()
         .background(Color(UIColor.systemGray6))
         .cornerRadius(10)
-    }
-    
-    private func metricBlock(title: String, value: String, direction: String, isPositive: Bool) -> some View {
-        VStack(alignment: .leading) {
-            Text(title)
-                .font(.callout)
-                .fontWeight(.medium)
-                .foregroundColor(.gray)
-            
-            Text(value)
-                .font(.system(size: 32, weight: .bold))
-                .padding(.vertical, 1)
-            
-            HStack {
-                Image(systemName: isPositive ? "arrow.up" : "arrow.down")
-                    .foregroundColor(isPositive ? .green : .orange)
-                
-                Text(direction)
-                    .foregroundColor(isPositive ? .green : .orange)
-                    .fontWeight(.medium)
-            }
-        }
-        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -129,9 +154,9 @@ struct EmotionalProfileChart: View {
         VStack(spacing: 10) {
             Text("Emotional Expression Profile")
                 .font(.headline)
-                .padding(.bottom, 10)
+                .padding(.vertical, 5)
             
-            RadarChart(
+            RadarChartView(
                 data: [
                     metrics.calm,
                     metrics.joy,
@@ -141,32 +166,43 @@ struct EmotionalProfileChart: View {
                 ],
                 labels: ["Calm", "Joy", "Expression", "Tension", "Energy"]
             )
-            .frame(height: 300)
+            .aspectRatio(1, contentMode: .fit)
+            .padding()
         }
-        .padding()
         .background(Color(UIColor.systemGray6))
         .cornerRadius(10)
     }
 }
 
-struct RadarChart: View {
+// Refined Radar Chart with better positioning
+struct RadarChartView: View {
     let data: [Double] // Values between 0 and 1
     let labels: [String]
     
     private let gridColor = Color.gray.opacity(0.3)
-    private let dataColor = Color.blue.opacity(0.5)
+    private let dataColor = Color.blue.opacity(0.7)
     private let outlineColor = Color.blue
     
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Background circles
+                // Background circles - grid
                 ForEach(0..<4) { i in
                     let scale = Double(i + 1) / 5.0
                     Circle()
                         .stroke(gridColor, lineWidth: 1)
                         .frame(width: geometry.size.width * CGFloat(scale),
                                height: geometry.size.width * CGFloat(scale))
+                }
+                
+                // Scale labels
+                ForEach(1..<5) { i in
+                    let value = Double(i) * 0.2
+                    Text(String(format: "%.1f", value))
+                        .font(.system(size: 8))
+                        .foregroundColor(.gray)
+                        .position(x: geometry.size.width/2,
+                                 y: geometry.size.height/2 - CGFloat(value) * geometry.size.height/2 + 5)
                 }
                 
                 // Axis lines
@@ -182,19 +218,6 @@ struct RadarChart: View {
                     .stroke(gridColor, lineWidth: 1)
                 }
                 
-                // Labels
-                ForEach(0..<data.count, id: \.self) { i in
-                    let point = pointOnCircle(
-                        center: CGPoint(x: geometry.size.width/2, y: geometry.size.height/2),
-                        radius: geometry.size.width/2 + 15, // Position just outside the radar
-                        angle: angleFor(index: i, total: data.count)
-                    )
-                    
-                    Text(labels[i])
-                        .font(.caption)
-                        .position(point)
-                }
-                
                 // Data polygon
                 dataPolygon(in: geometry.size)
                     .fill(dataColor)
@@ -203,14 +226,21 @@ struct RadarChart: View {
                 dataPolygon(in: geometry.size)
                     .stroke(outlineColor, lineWidth: 2)
                 
-                // Value labels along axes
-                ForEach(1..<5) { i in
-                    let value = Double(i) * 0.2
-                    Text(String(format: "%.1f", value))
-                        .font(.system(size: 8))
-                        .foregroundColor(.gray)
-                        .position(x: geometry.size.width/2,
-                                 y: geometry.size.height/2 - CGFloat(value) * geometry.size.height/2 + 5)
+                // Labels with better positioning
+                ForEach(0..<data.count, id: \.self) { i in
+                    let angle = angleFor(index: i, total: data.count)
+                    let radius = geometry.size.width/2 + 20
+                    let point = pointOnCircle(
+                        center: CGPoint(x: geometry.size.width/2, y: geometry.size.height/2),
+                        radius: radius,
+                        angle: angle
+                    )
+                    
+                    // Adjust label position based on its position in the circle
+                    Text(labels[i])
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .position(adjustLabelPosition(for: point, label: labels[i], angle: angle))
                 }
             }
         }
@@ -236,15 +266,46 @@ struct RadarChart: View {
     }
     
     private func angleFor(index: Int, total: Int) -> Double {
-        // Start from the top (270°) and go clockwise
+        // Start from the top (270° or -90°) and go clockwise
         let angleSize = (2 * Double.pi) / Double(total)
-        return Double.pi * 1.5 + angleSize * Double(index)
+        let startAngle = -(Double.pi / 2) // Top of circle
+        return startAngle + angleSize * Double(index)
     }
     
     private func pointOnCircle(center: CGPoint, radius: CGFloat, angle: Double) -> CGPoint {
         let x = center.x + radius * CGFloat(cos(angle))
         let y = center.y + radius * CGFloat(sin(angle))
         return CGPoint(x: x, y: y)
+    }
+    
+    private func adjustLabelPosition(for point: CGPoint, label: String, angle: Double) -> CGPoint {
+        // Estimate text width
+        let estimatedWidth = CGFloat(label.count) * 5
+        let estimatedHeight: CGFloat = 15
+        
+        // Adjust position based on which quadrant the label is in
+        let degrees = (angle * 180 / .pi).truncatingRemainder(dividingBy: 360)
+        
+        var adjustedPoint = point
+        
+        // Top quadrant
+        if degrees >= 270 || degrees < 0 {
+            adjustedPoint.y -= estimatedHeight/2
+        }
+        // Right quadrant
+        else if degrees >= 0 && degrees < 90 {
+            adjustedPoint.x += estimatedWidth/2
+        }
+        // Bottom quadrant
+        else if degrees >= 90 && degrees < 180 {
+            adjustedPoint.y += estimatedHeight/2
+        }
+        // Left quadrant
+        else if degrees >= 180 && degrees < 270 {
+            adjustedPoint.x -= estimatedWidth/2
+        }
+        
+        return adjustedPoint
     }
 }
 

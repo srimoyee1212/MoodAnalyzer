@@ -10,8 +10,9 @@ import PencilKit
 struct DrawingView: View {
     @State private var canvasView = PKCanvasView()
     @State private var selectedColor: UIColor = .black
-    @State private var showResults = false
-    @State private var aiAnalysis = "AI analyzing your drawings..."
+    @State private var isAnalyzing = false
+    @State private var aiAnalysis = ""
+    @State private var showAnalysisView = false
     
     // Define a palette of colors for the user to choose from.
     let palette: [UIColor] = [.black, .red, .green, .blue, .orange, .purple]
@@ -45,30 +46,53 @@ struct DrawingView: View {
             }
             .padding()
             
-            Button("Analyze Drawing") {
+            Button(action: {
+                isAnalyzing = true
                 analyzeArtwork()
+            }) {
+                if isAnalyzing {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                } else {
+                    Text("Analyze Drawing")
+                }
             }
             .padding()
-            .background(Color.green)
+            .frame(width: 200)
+            .background(isAnalyzing ? Color.gray : Color.green)
             .foregroundColor(.white)
             .cornerRadius(8)
+            .disabled(isAnalyzing)
             
-            if showResults {
-                Text(aiAnalysis)
+            Button(action: {
+                // Clear the canvas
+                canvasView.drawing = PKDrawing()
+            }) {
+                Text("Clear Drawing")
                     .padding()
+                    .frame(width: 200)
+                    .background(Color.red.opacity(0.8))
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
             }
+            .padding(.top, 8)
         }
         .padding()
+        .sheet(isPresented: $showAnalysisView) {
+            AnalysisView(analysisText: aiAnalysis)
+        }
     }
     
     private func analyzeArtwork() {
         // Capture the current drawing as an image
         let image = canvasView.drawing.image(from: canvasView.bounds, scale: 1.0)
+        
         // Call the GroqVisionAPI (from your GroqVisionAPI.swift file)
         GroqVisionAPI().analyzeDrawing(image: image) { response in
             DispatchQueue.main.async {
-                aiAnalysis = response ?? "Error analyzing drawing"
-                showResults = true
+                isAnalyzing = false
+                aiAnalysis = response ?? "Error analyzing drawing. Please try again."
+                showAnalysisView = true
             }
         }
     }

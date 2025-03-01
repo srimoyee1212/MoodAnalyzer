@@ -19,6 +19,19 @@ struct GroqVisionAPI {
         }
         let base64String = imageData.base64EncodedString()
         let formattedImageDataURL = "data:image/jpeg;base64,\(base64String)"
+        
+        let enhancedPrompt = """
+                Analyze this drawing from a psychological perspective using color theory and what the artwork is depicting(could be simple smiley or sad faces like emojis or objects like trees, flowers, hearts and simple objects), considering the following aspects:
+
+                1. What is the drawing depicting?
+                2. Formal elements: colors used, line quality, space utilization, composition, and overall style
+                3. Emotional content: mood and feelings expressed through the drawing
+                4. Symbolic meanings: potential meanings of specific elements and symbols
+                5. Psychological insights: what the drawing might suggest about the person's current emotional state
+                6. Strengths observed: positive aspects reflected in the artistic expression
+                
+                Please structure your analysis into these sections, and provide a thoughtful, supportive interpretation that focuses on psychological well-being. Avoid making any definitive diagnoses or clinical statements. Conclude with some encouraging observations.
+                """
 
         // Construct JSON payload with the correct format for vision models
         let body: [String: Any] = [
@@ -27,12 +40,12 @@ struct GroqVisionAPI {
                 [
                     "role": "user",
                     "content": [
-                        ["type": "text", "text": "Analyze this drawing for psychological insights."],
+                        ["type": "text", "text": enhancedPrompt],
                         ["type": "image_url", "image_url": ["url": formattedImageDataURL]]
                     ]
                 ]
             ],
-            "temperature": 1.0,
+            "temperature": 0.7,
             "max_tokens": 1024,
             "top_p": 1.0,
             "stream": false

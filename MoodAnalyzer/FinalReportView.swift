@@ -1,10 +1,3 @@
-//
-//  FinalReportView.swift
-//  MoodAnalyzer
-//
-//  Updated with improved layout
-//
-
 import SwiftUI
 import PDFKit
 
@@ -13,6 +6,14 @@ struct FinalReportView: View {
     let drawingAnalysis: String
     let drawingImage: UIImage
     let isGreenMode: Bool
+    
+    // Additional properties for drawing-only mode
+    var allDrawings: [UIImage]?
+    var allAnalyses: [String]?
+    var drawingPrompts: [String]?
+    var isDrawingOnlyMode: Bool {
+        return responses.isEmpty && allDrawings != nil && allAnalyses != nil
+    }
     
     @State private var assessmentNotes: String = ""
     @State private var showingPDFPreview = false
@@ -36,40 +37,27 @@ struct FinalReportView: View {
         return percentages
     }
     
-    // Emotional metrics computed from assessment data
-    var emotionalMetrics: EmotionalMetrics {
-        return EmotionalMetrics.calculateFromAssessment(
-            responses: responses,
-            drawingAnalysis: drawingAnalysis,
-            categoryPercentages: categoryPercentages
-        )
-    }
-    
-    // Process categories into groups
-    var strengthCategories: [String] {
-        return categoryPercentages.filter { $0.value >= 70.0 }.keys.sorted()
-    }
-    
-    var neutralCategories: [String] {
-        return categoryPercentages.filter { $0.value >= 40.0 && $0.value < 70.0 }.keys.sorted()
-    }
-    
-    var concernCategories: [String] {
-        return categoryPercentages.filter { $0.value < 40.0 }.keys.sorted()
-    }
-    
-    // Overall emotional state assessment
-    var overallAssessment: String {
-        let averageScore = categoryPercentages.values.reduce(0.0, +) / Double(categoryPercentages.count)
-        
-        if averageScore >= 75.0 {
-            return "The assessment indicates a generally positive emotional state. The individual demonstrates strong resilience and coping mechanisms with minimal indicators of psychological distress."
-        } else if averageScore >= 60.0 {
-            return "The assessment suggests a moderately stable emotional state. While showing adequate coping in several areas, there may be specific aspects that could benefit from supportive intervention."
-        } else if averageScore >= 45.0 {
-            return "The assessment reveals a mixed emotional state. The individual shows both strengths and potential concerns that warrant closer attention in a therapeutic context."
+    // For drawing-only mode, estimate emotional metrics
+    var estimatedEmotionalMetrics: EmotionalMetrics {
+        if isDrawingOnlyMode {
+            // Create estimated metrics based on drawing analysis only
+            return EmotionalMetrics(
+                expressionLevel: 0.7, // Example values - in real implementation,
+                emotionalBalance: 0.6, // these would be calculated from the drawing analyses
+                creativeEnergy: 0.8,
+                joy: 0.65,
+                calm: 0.55,
+                energy: 0.7,
+                tension: 0.4,
+                expression: 0.75
+            )
         } else {
-            return "The assessment indicates potential emotional difficulties across multiple domains. A more thorough clinical evaluation is recommended to provide appropriate support and intervention strategies."
+            // Use the standard calculation for normal modes
+            return EmotionalMetrics.calculateFromAssessment(
+                responses: responses,
+                drawingAnalysis: drawingAnalysis,
+                categoryPercentages: categoryPercentages
+            )
         }
     }
     
@@ -87,7 +75,7 @@ struct FinalReportView: View {
                             .font(.subheadline)
                             .foregroundColor(.gray)
                         
-                        Text("Assessment Type: \(isGreenMode ? "Child Assessment (Green Mode)" : "Adult Assessment (Standard Mode)")")
+                        Text("Assessment Type: \(getAssessmentTypeText())")
                             .font(.subheadline)
                             .foregroundColor(.gray)
                     }
@@ -95,126 +83,137 @@ struct FinalReportView: View {
                     
                     Divider()
                     
-                    // New Analysis Metrics View - Fixed layout
-                    AnalysisMetricsView(metrics: emotionalMetrics)
+                    // Analysis Metrics View
+                    AnalysisMetricsView(metrics: estimatedEmotionalMetrics)
                         .padding(.horizontal)
                     
-                    // New Emotional Expression Profile Chart - Fixed layout
-                    EmotionalProfileChart(metrics: emotionalMetrics)
+                    // Emotional Expression Profile Chart
+                    EmotionalProfileChart(metrics: estimatedEmotionalMetrics)
                         .padding(.horizontal)
-                        .frame(height: 300)
+                        .frame(height: 500)
                     
                     Divider()
                     
-                    // Assessment Summary
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Assessment Summary")
-                            .font(.headline)
-                            .padding(.bottom, 2)
+                    // Drawing Series View for drawing-only mode
+                    if isDrawingOnlyMode, let drawings = allDrawings, let analyses = allAnalyses, let prompts = drawingPrompts {
+                        DrawingSeriesView(drawings: drawings, analyses: analyses, prompts: prompts)
+                            .padding(.horizontal)
+                    } else {
+                        // Standard views for regular and green modes
                         
-                        Text(overallAssessment)
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color(UIColor.systemGray6))
-                            )
-                    }
-                    .padding(.horizontal)
-                    
-                    Divider()
-                    
-                    // Questionnaire Results
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Questionnaire Results")
-                            .font(.headline)
-                            .padding(.bottom, 2)
+                        // Assessment Summary
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Assessment Summary")
+                                .font(.headline)
+                                .padding(.bottom, 2)
+                            
+                            Text(isDrawingOnlyMode ? drawingAnalysis : overallAssessment)
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color(UIColor.systemGray6))
+                                )
+                        }
+                        .padding(.horizontal)
                         
-                        ForEach(categoryPercentages.keys.sorted(), id: \.self) { category in
-                            if let percentage = categoryPercentages[category] {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("\(category): \(Int(percentage))%")
-                                        .font(.subheadline)
-                                    GeometryReader { geometry in
-                                        Rectangle()
-                                            .fill(categoryColor(percentage))
-                                            .frame(width: geometry.size.width * CGFloat(percentage / 100), height: 16)
-                                            .cornerRadius(3)
+                        // Only show questionnaire results for non-drawing-only modes
+                        if !isDrawingOnlyMode {
+                            Divider()
+                            
+                            // Questionnaire Results
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Questionnaire Results")
+                                    .font(.headline)
+                                    .padding(.bottom, 2)
+                                
+                                ForEach(categoryPercentages.keys.sorted(), id: \.self) { category in
+                                    if let percentage = categoryPercentages[category] {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("\(category): \(Int(percentage))%")
+                                                .font(.subheadline)
+                                            GeometryReader { geometry in
+                                                Rectangle()
+                                                    .fill(categoryColor(percentage))
+                                                    .frame(width: geometry.size.width * CGFloat(percentage / 100), height: 16)
+                                                    .cornerRadius(3)
+                                            }
+                                            .frame(height: 16)
+                                        }
+                                        .padding(.vertical, 3)
                                     }
-                                    .frame(height: 16)
                                 }
-                                .padding(.vertical, 3)
+                                
+                                VStack(alignment: .leading, spacing: 10) {
+                                    if !strengthCategories.isEmpty {
+                                        Text("Areas of Strength:")
+                                            .fontWeight(.semibold)
+                                        Text(strengthCategories.joined(separator: ", "))
+                                    }
+                                    
+                                    if !neutralCategories.isEmpty {
+                                        Text("Areas of Moderate Function:")
+                                            .fontWeight(.semibold)
+                                            .padding(.top, 5)
+                                        Text(neutralCategories.joined(separator: ", "))
+                                    }
+                                    
+                                    if !concernCategories.isEmpty {
+                                        Text("Areas of Potential Concern:")
+                                            .fontWeight(.semibold)
+                                            .padding(.top, 5)
+                                        Text(concernCategories.joined(separator: ", "))
+                                    }
+                                }
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color(UIColor.systemGray6))
+                                )
                             }
+                            .padding(.horizontal)
                         }
                         
-                        VStack(alignment: .leading, spacing: 10) {
-                            if !strengthCategories.isEmpty {
-                                Text("Areas of Strength:")
-                                    .fontWeight(.semibold)
-                                Text(strengthCategories.joined(separator: ", "))
-                            }
+                        Divider()
+                        
+                        // Drawing Analysis
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Drawing Analysis")
+                                .font(.headline)
+                                .padding(.bottom, 2)
                             
-                            if !neutralCategories.isEmpty {
-                                Text("Areas of Moderate Function:")
-                                    .fontWeight(.semibold)
-                                    .padding(.top, 5)
-                                Text(neutralCategories.joined(separator: ", "))
-                            }
+                            Image(uiImage: drawingImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 300)
+                                .cornerRadius(10)
+                                .padding(.vertical, 10)
                             
-                            if !concernCategories.isEmpty {
-                                Text("Areas of Potential Concern:")
-                                    .fontWeight(.semibold)
-                                    .padding(.top, 5)
-                                Text(concernCategories.joined(separator: ", "))
-                            }
+                            Text(drawingAnalysis)
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color(UIColor.systemGray6))
+                                )
                         }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color(UIColor.systemGray6))
-                        )
-                    }
-                    .padding(.horizontal)
-                    
-                    Divider()
-                    
-                    // Drawing Analysis
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Drawing Analysis")
-                            .font(.headline)
-                            .padding(.bottom, 2)
+                        .padding(.horizontal)
                         
-                        Image(uiImage: drawingImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 300)
-                            .cornerRadius(10)
-                            .padding(.vertical, 10)
+                        Divider()
                         
-                        Text(drawingAnalysis)
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color(UIColor.systemGray6))
-                            )
+                        // Integrated Assessment
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Integrated Assessment")
+                                .font(.headline)
+                                .padding(.bottom, 2)
+                            
+                            Text(isDrawingOnlyMode ? drawingAnalysis : integratedAssessment())
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color(UIColor.systemGray6))
+                                )
+                        }
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
-                    
-                    Divider()
-                    
-                    // Integrated Assessment
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Integrated Assessment")
-                            .font(.headline)
-                            .padding(.bottom, 2)
-                        
-                        Text(integratedAssessment())
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color(UIColor.systemGray6))
-                            )
-                    }
-                    .padding(.horizontal)
                     
                     Divider()
                     
@@ -270,7 +269,7 @@ struct FinalReportView: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Therapeutic Assessment Report")
+            .navigationTitle("Assessment Report")
             .sheet(isPresented: $showingPDFPreview) {
                 if let pdfDocument = pdfDocument {
                     PDFPreviewView(document: pdfDocument)
@@ -279,6 +278,29 @@ struct FinalReportView: View {
             .sheet(isPresented: $showingShareSheet) {
                 SimpleShareSheet(items: sharingItems)
             }
+        }
+    }
+    
+    // Process categories into groups (for questionnaire-based modes)
+    var strengthCategories: [String] {
+        return categoryPercentages.filter { $0.value >= 70.0 }.keys.sorted()
+    }
+    
+    var neutralCategories: [String] {
+        return categoryPercentages.filter { $0.value >= 40.0 && $0.value < 70.0 }.keys.sorted()
+    }
+    
+    var concernCategories: [String] {
+        return categoryPercentages.filter { $0.value < 40.0 }.keys.sorted()
+    }
+    
+    private func getAssessmentTypeText() -> String {
+        if isDrawingOnlyMode {
+            return "Drawing Series Assessment"
+        } else if isGreenMode {
+            return "Child Assessment (Green Mode)"
+        } else {
+            return "Adult Assessment (Standard Mode)"
         }
     }
     
@@ -299,6 +321,7 @@ struct FinalReportView: View {
     }
     
     private func integratedAssessment() -> String {
+        // Existing code for regular and green modes
         // Integrating questionnaire and drawing analysis
         let avgScore = categoryPercentages.values.reduce(0.0, +) / Double(categoryPercentages.count)
         
@@ -315,7 +338,7 @@ struct FinalReportView: View {
         
         The questionnaire results (overall score: \(Int(avgScore))%) and the drawing analysis (emotional tone: \(drawingEmotionalTone)) \(consistencyAssessment)
         
-        Based on the emotional metrics, this individual shows \(emotionalMetrics.expressionLevelText.lowercased()) expression levels with \(emotionalMetrics.emotionalBalanceText.lowercased()) emotional balance and \(emotionalMetrics.creativeEnergyText.lowercased()) creative energy. The emotional profile indicates particular strength in \(identifyStrongestDimension()).
+        Based on the emotional metrics, this individual shows \(estimatedEmotionalMetrics.expressionLevelText.lowercased()) expression levels with \(estimatedEmotionalMetrics.emotionalBalanceText.lowercased()) emotional balance and \(estimatedEmotionalMetrics.creativeEnergyText.lowercased()) creative energy. The emotional profile indicates particular strength in \(identifyStrongestDimension()).
         
         This assessment was conducted using the \(assessmentMode) assessment framework and should be interpreted within the appropriate developmental context.
         
@@ -325,10 +348,10 @@ struct FinalReportView: View {
     
     private func identifyStrongestDimension() -> String {
         let dimensions = [
-            ("calm", emotionalMetrics.calm),
-            ("joy", emotionalMetrics.joy),
-            ("emotional expression", emotionalMetrics.expression),
-            ("energy", emotionalMetrics.energy)
+            ("calm", estimatedEmotionalMetrics.calm),
+            ("joy", estimatedEmotionalMetrics.joy),
+            ("emotional expression", estimatedEmotionalMetrics.expression),
+            ("energy", estimatedEmotionalMetrics.energy)
         ]
         
         // Find the dimension with the highest value
@@ -374,6 +397,25 @@ struct FinalReportView: View {
         }
     }
     
+    // Overall emotional state assessment
+    var overallAssessment: String {
+        if isDrawingOnlyMode {
+            return drawingAnalysis
+        }
+        
+        let averageScore = categoryPercentages.values.reduce(0.0, +) / Double(categoryPercentages.count)
+        
+        if averageScore >= 75.0 {
+            return "The assessment indicates a generally positive emotional state. The individual demonstrates strong resilience and coping mechanisms with minimal indicators of psychological distress."
+        } else if averageScore >= 60.0 {
+            return "The assessment suggests a moderately stable emotional state. While showing adequate coping in several areas, there may be specific aspects that could benefit from supportive intervention."
+        } else if averageScore >= 45.0 {
+            return "The assessment reveals a mixed emotional state. The individual shows both strengths and potential concerns that warrant closer attention in a therapeutic context."
+        } else {
+            return "The assessment indicates potential emotional difficulties across multiple domains. A more thorough clinical evaluation is recommended to provide appropriate support and intervention strategies."
+        }
+    }
+    
     // PDF generation and sharing functions
     private func generateAndViewPDF() {
         if let fileURL = generatePDFFile() {
@@ -391,15 +433,27 @@ struct FinalReportView: View {
     }
     
     private func generatePDFFile() -> URL? {
-        return ShareController.generateAndSavePDF(
-            responses: responses,
-            categoryPercentages: categoryPercentages,
-            drawingImage: drawingImage,
-            drawingAnalysis: drawingAnalysis,
-            integratedAssessment: integratedAssessment(),
-            assessmentNotes: assessmentNotes,
-            isGreenMode: isGreenMode
-        )
+        // Use different PDF generation methods depending on the mode
+        if isDrawingOnlyMode, let drawings = allDrawings, let analyses = allAnalyses, let prompts = drawingPrompts {
+            return ShareController.generateAndSaveDrawingOnlyPDF(
+                drawingImages: drawings,
+                drawingAnalyses: analyses,
+                drawingPrompts: prompts,
+                cumulativeAnalysis: drawingAnalysis,
+                assessmentNotes: assessmentNotes
+            )
+        } else {
+            // Use the standard method for regular and green modes
+            return ShareController.generateAndSavePDF(
+                responses: responses,
+                categoryPercentages: categoryPercentages,
+                drawingImage: drawingImage,
+                drawingAnalysis: drawingAnalysis,
+                integratedAssessment: isDrawingOnlyMode ? drawingAnalysis : integratedAssessment(),
+                assessmentNotes: assessmentNotes,
+                isGreenMode: isGreenMode
+            )
+        }
     }
 }
 
@@ -416,27 +470,5 @@ struct PDFPreviewView: UIViewRepresentable {
     
     func updateUIView(_ uiView: PDFView, context: Context) {
         uiView.document = document
-    }
-}
-
-// For Preview
-struct FinalReportView_Previews: PreviewProvider {
-    static var previews: some View {
-        let sampleResponses: [(question: Question, score: Int)] = [
-            (Question(text: "I handle difficult situations well.", category: "Resilience & Coping", isReverseScored: false), 4),
-            (Question(text: "I get better tomorrow even after a tiring day.", category: "Resilience & Coping", isReverseScored: false), 3),
-            (Question(text: "I feel lonely.", category: "Social Connection & Loneliness", isReverseScored: true), 2)
-        ]
-        
-        let sampleAnalysis = """
-        This drawing shows a balanced composition with strong use of color. The lines indicate confidence and emotional stability, while the spatial arrangement suggests openness to new experiences. The drawing style reflects a creative mindset with attention to detail.
-        """
-        
-        return FinalReportView(
-            responses: sampleResponses,
-            drawingAnalysis: sampleAnalysis,
-            drawingImage: UIImage(),
-            isGreenMode: false
-        )
     }
 }

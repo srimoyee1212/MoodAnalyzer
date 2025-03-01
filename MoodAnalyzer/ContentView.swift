@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  MoodAnalyzer
-//
-//  Updated with Final Report Integration
-//
-
 import SwiftUI
 
 // Define the Question struct.
@@ -18,6 +11,7 @@ struct Question: Identifiable {
 enum AppMode: String, CaseIterable, Identifiable {
     case regular = "Regular Mode"
     case green = "Green Mode"
+    case drawingOnly = "Drawing Only Mode"
     
     var id: String { self.rawValue }
 }
@@ -35,6 +29,7 @@ struct ContentView: View {
 struct ModeSelectionView: View {
     @State private var selectedMode: AppMode = .regular  // default mode
     @State private var navigateToMain = false
+    @State private var navigateToDrawingOnly = false
     
     var body: some View {
         VStack {
@@ -50,23 +45,60 @@ struct ModeSelectionView: View {
             .pickerStyle(SegmentedPickerStyle())
             .padding()
             
-            NavigationLink(
-                destination: MainQuestionsView(isGreenMode: selectedMode == .green),
-                isActive: $navigateToMain,
-                label: {
-                    Button("Continue") {
-                        // When the user taps Continue, trigger navigation.
-                        navigateToMain = true
-                        print("Mode selected: \(selectedMode.rawValue)")
-                    }
+            // Description of selected mode
+            VStack(alignment: .leading, spacing: 10) {
+                Text(getModeDescription())
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(UIColor.systemGray6))
+                    )
+            }
+            .padding(.horizontal)
+            .padding(.bottom)
+            
+            Button(action: {
+                // When the user taps Continue, trigger navigation based on mode.
+                if selectedMode == .drawingOnly {
+                    navigateToDrawingOnly = true
+                } else {
+                    navigateToMain = true
+                }
+                print("Mode selected: \(selectedMode.rawValue)")
+            }) {
+                Text("Continue")
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(10)
-                })
+            }
+            
+            // Multiple NavigationLinks for different destinations
+            NavigationLink(
+                destination: MainQuestionsView(isGreenMode: selectedMode == .green),
+                isActive: $navigateToMain,
+                label: { EmptyView() }
+            )
+            
+            NavigationLink(
+                destination: DrawingOnlyView(),
+                isActive: $navigateToDrawingOnly,
+                label: { EmptyView() }
+            )
         }
         .padding()
+    }
+    
+    private func getModeDescription() -> String {
+        switch selectedMode {
+        case .regular:
+            return "Adult assessment with questionnaire and drawing analysis. Comprehensive emotional evaluation with detailed metrics."
+        case .green:
+            return "Child-friendly assessment with age-appropriate questions and drawing analysis. Uses simpler language and concepts."
+        case .drawingOnly:
+            return "Expression through guided drawing exercises. AI will prompt you to draw specific things, analyze your drawings, and generate a comprehensive emotional assessment."
+        }
     }
 }
 
@@ -357,11 +389,5 @@ struct ResultsView: View {
         } else {
             return Color.red
         }
-    }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
     }
 }
